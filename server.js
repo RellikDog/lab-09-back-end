@@ -5,8 +5,6 @@ const express = require('express');
 const pg = require('pg');
 const cors = require('cors');
 const superAgent = require('superagent');
-let lat;
-let long;
 
 //Load env vars;
 require('dotenv').config();
@@ -79,7 +77,7 @@ function searchLocation (query){
       return client.query(SQL, [query, location.formatted_query, location.latitude, location.longitude])
         .then(() => {
           console.log('stored to DB');
-          return location;//5ends with a sucseful storage
+          return location;//sends with a sucseful storage
         }).catch(err => console.error(err));
     });
 }
@@ -89,8 +87,6 @@ function Location(location, query){
   this.formatted_query = location.formatted_address;
   this.latitude = location.geometry.location.lat;
   this.longitude = location.geometry.location.lng;
-  lat = location.geometry.location.lat;
-  long = location.geometry.location.lng;
 }
 
 
