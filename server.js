@@ -252,6 +252,7 @@ app.get('/weather', (request, response) => {
 // app.get('/movies', getMov);
 // app.get('/yelp', getYelp);
 app.get('/meetups', getMeets);
+app.get('/trail', getHikes);
 // Get Location data
 // help from erin and skyler
 function getLocation(request, response){
@@ -445,8 +446,7 @@ function searchMeets(query){
               //   //sends with a sucseful storage
               //   }
             let SQL = `INSERT INTO meetups
-              (link, name, creation_date, host, location_id, created_at,)
-              VALUES($1, $2, $3, $4, $5 $6)`;
+                      VALUES($1, $2, $3, $4, $5 $6)`;
             mArr.forEach(meetup => {
               client.query(SQL, [meetup.link, meetup.name, meetup.creation_date, meetup.host, query.id, Date.now()])
             });
@@ -468,6 +468,63 @@ function Meetup(data){
   this.name = data.name;
   this.creation_date = new Date(data.created * 1000).toDateString();
   this.host = data.organizer.name;
+}
+//=======================================================================================================
+function getHikes(request, response){
+  searchHikes(request.query.data)
+    .then(data => {
+      response.send(data);
+    }).catch(err => console.error(err));
+}
+function searchHikes(query){
+  const URL = `https://www.hikingproject.com/data/get-trails?lat=${query.latitude}&lon=${query.longitude}&maxDistance=10&key=${process.env.HIKE_API_KEY}`;
+  const SQL = 'SELECT * FROM hikes WHERE location_id=$1';
+  return client.query(SQL, [query.id])
+    .then(result => {
+      if(!result.rowCount){
+        console.log('gonna go get stuff from the trails api');
+        return superAgent.get(URL)
+          .then(data => {
+            // console.log(data.body);
+            let hikeArr = data.body.trails.map(ele => {
+              return new Trail(ele);
+            });
+              // client.query(SQL, [meetup.link, meetup.name, meetup.creation_date, meetup.host, Date.now(), query.id])
+              //   .then(() => {
+              //     console.log('stored to DB');
+              //   //sends with a sucseful storage
+              //   }
+            let SQL = `INSERT INTO trails
+              (name, location, length, stars, star_votes, summary, trail_url, conditions, conditionDate, conditionTime, location_id, created_at)
+              VALUES($1, $2, $3, $4, $5 $6 $7 $8 $9 $10 $11 $12)`;
+            hikeArr.forEach(trail => {
+              client.query(SQL, [trail.name, trail.location, trail.length, trail.stars, trail.star_votes, trail.summary, trail.trail_url, trail.conditions, trail.condition_date, trail.condition_time, query.id, Date.now()]);
+            });
+            return hikeArr;
+          }).catch(err => console.error(err));
+
+      }
+      else {
+        console.log('found stuff in the db for meetups');
+        console.log(result.rows);
+        return result.rows;
+      }
+    }).catch(err => console.error(err));
+
+}
+
+function Trail(data){
+  this.name = data.name;
+  this.location = data.location;
+  this.length = data.length;
+  this.stars = data.stars;
+  this.star_votes = data.starVotes;
+  this.summary = data.summary;
+  this.trail_url = data.url;
+  this.conditions = data.conditionStatus;
+  let conditionDateTime = data.conditionDate.split(' ');
+  this.condition_date = conditionDateTime[0];
+  this.condition_time = conditionDateTime[1];
 }
 //=======================================================================================================
 // Error messages
