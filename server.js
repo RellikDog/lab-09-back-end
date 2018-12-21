@@ -446,7 +446,7 @@ function searchMeets(query){
               //   //sends with a sucseful storage
               //   }
             let SQL = `INSERT INTO meetups
-                      VALUES($1, $2, $3, $4, $5 $6)`;
+                      VALUES($1, $2, $3, $4, $5, $6)`;
             mArr.forEach(meetup => {
               client.query(SQL, [meetup.link, meetup.name, meetup.creation_date, meetup.host, query.id, Date.now()])
             });
@@ -496,7 +496,7 @@ function searchHikes(query){
               //   }
             let SQL = `INSERT INTO trails
               (name, location, length, stars, star_votes, summary, trail_url, conditions, conditionDate, conditionTime, location_id, created_at)
-              VALUES($1, $2, $3, $4, $5 $6 $7 $8 $9 $10 $11 $12)`;
+              VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`;
             hikeArr.forEach(trail => {
               client.query(SQL, [trail.name, trail.location, trail.length, trail.stars, trail.star_votes, trail.summary, trail.trail_url, trail.conditions, trail.condition_date, trail.condition_time, query.id, Date.now()]);
             });

@@ -15,9 +15,9 @@ CREATE TABLE weathers (
     id SERIAL PRIMARY KEY,
     forecast VARCHAR(255),
     time VARCHAR(255),
-    location_id INTEGER NOT NULL,
-    FOREIGN KEY (location_id) REFERENCES locations (id),
-    created_at NUMERIC, 
+    -- location_id INTEGER NOT NULL,
+    -- FOREIGN KEY (location_id) REFERENCES locations (id),
+    created_at NUMERIC 
 );
 
 CREATE TABLE meetups (
@@ -26,8 +26,8 @@ CREATE TABLE meetups (
     name VARCHAR(255),
     creation_date NUMERIC,
     host VARCHAR(255),
-    location_id INTEGER NOT NULL,
-    FOREIGN KEY (location_id) REFERENCES locations (id),
+    -- location_id INTEGER NOT NULL,
+    -- FOREIGN KEY (location_id) REFERENCES locations (id),
     created_at NUMERIC
 );
 
@@ -36,14 +36,14 @@ CREATE TABLE trails (
     name VARCHAR(255),
     location VARCHAR(255),
     length VARCHAR(255),
-    stars INTEGER,
-    star_votes INTEGER,
+    stars NUMERIC,
+    star_votes NUMERIC,
     summary TEXT,
     trail_url TEXT,
     conditions TEXT,
     conditionDate VARCHAR(255),
     conditionTime VARCHAR(255),
-    location_id INTEGER NOT NULL,
-    FOREIGN KEY (location_id) REFERENCES locations (id),
+    -- location_id INTEGER NOT NULL,
+    -- FOREIGN KEY (location_id) REFERENCES locations (id),
     created_at NUMERIC
 );
