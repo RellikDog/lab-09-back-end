@@ -249,10 +249,10 @@ app.get('/weather', (request, response) => {
     });
   // console.log(weatherGet);
 });
-// app.get('/movies', getMov);
-// app.get('/yelp', getYelp);
+app.get('/movies', getMov);
+app.get('/yelp', getYelp);
 app.get('/meetups', getMeets);
-app.get('/trail', getHikes);
+app.get('/trail', getTrails);
 // Get Location data
 // help from erin and skyler
 function getLocation(request, response){
@@ -470,72 +470,72 @@ function Meetup(data){
   this.host = data.organizer.name;
 }
 //=======================================================================================================
-function getHikes(request, response){
-  searchHikes(request.query.data)
+function getTrails(request, response){
+  checkTrails(request.query.data)
     .then(data => {
       response.send(data);
-    }).catch(err => console.error(err));
+    }).catch(err => console.log(err));
 }
-function searchHikes(query){
-  const URL = `https://www.hikingproject.com/data/get-trails?lat=${query.latitude}&lon=${query.longitude}&maxDistance=10&key=${process.env.HIKE_API_KEY}`;
-  const SQL = 'SELECT * FROM hikes WHERE location_id=$1';
-  return client.query(SQL, [query.id])
-    .then(result => {
-      if(!result.rowCount){
-        console.log('gonna go get stuff from the trails api');
-        return superAgent.get(URL)
-          .then(data => {
-            // console.log(data.body);
-            let hikeArr = data.body.trails.map(ele => {
-              return new Trail(ele);
-            });
-              // client.query(SQL, [meetup.link, meetup.name, meetup.creation_date, meetup.host, Date.now(), query.id])
-              //   .then(() => {
-              //     console.log('stored to DB');
-              //   //sends with a sucseful storage
-              //   }
-            let SQL = `INSERT INTO trails
-              (name, location, length, stars, star_votes, summary, trail_url, conditions, conditionDate, conditionTime, location_id, created_at)
+function checkTrails(query){
+  let SQL = 'SELECT * FROM hiking WHERE location_id=$1';
+  return client.query(SQL, [query.id]).then(data => {
+    if(!data.rowCount){
+      const URL = `https://www.hikingproject.com/data/get-trails?lat=${query.lat}&lon=${query.long}&maxDistance=10&key=${process.env.HIKE_API_KEY}`;
+      return superAgent.get(URL)
+        .then(result => {
+          let trailData = JSON.parse(result.text);
+
+          let trailArray = trailData.trails.map(trail => {
+            return new Trail(trail);
+          });
+          let SQL = `INSERT INTO hiking
+              (name, location, length, stars, star_votes, summary, trail_url, conditions, condition_date, condition_time, location_id, created_at)
               VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`;
-            hikeArr.forEach(trail => {
-              client.query(SQL, [trail.name, trail.location, trail.length, trail.stars, trail.star_votes, trail.summary, trail.trail_url, trail.conditions, trail.condition_date, trail.condition_time, query.id, Date.now()]);
-            });
-            return hikeArr;
-          }).catch(err => console.error(err));
 
-      }
-      else {
-        console.log('found stuff in the db for meetups');
-        console.log(result.rows);
-        return result.rows;
-      }
-    }).catch(err => console.error(err));
-
+          trailArray.map(trail => {
+            client.query(SQL, [trail.name, trail.location, trail.length, trail.stars, trail.star_votes, trail.summary, trail.trail_url, trail. conditions, trail.condition_date, trail.condition_time, query.id, Date.now()])
+          });
+          return trailArray;
+        });
+    }else {
+      let arr = data.rows[0];
+      return arr;
+    }
+  })
+    .catch(err => console.log(err));
 }
+function Trail (trail) {
+  this.name = trail.name;
+  this.location = trail.location;
+  this.length = trail.length;
+  this.stars = trail.stars;
+  this.star_votes = trail.starVotes;
+  this.summary = trail.summary;
+  this.trail_url = trail.url;
+  this.conditions = trail.conditionDetails;
 
-function Trail(data){
-  this.name = data.name;
-  this.location = data.location;
-  this.length = data.length;
-  this.stars = data.stars;
-  this.star_votes = data.starVotes;
-  this.summary = data.summary;
-  this.trail_url = data.url;
-  this.conditions = data.conditionStatus;
-  let conditionDateTime = data.conditionDate.split(' ');
-  this.condition_date = conditionDateTime[0];
-  this.condition_time = conditionDateTime[1];
+  let condition = trail.conditionDate.split(' ');
+  this.condition_date = condition[0];
+  this.condition_time = condition[1];
 }
+// function Trail(data){
+//   this.name = data.name;
+//   this.location = data.location;
+//   this.length = data.length;
+//   this.stars = data.stars;
+//   this.star_votes = data.starVotes;
+//   this.summary = data.summary;
+//   this.trail_url = data.url;
+//   this.conditions = data.conditionStatus;
+//   let conditionDateTime = data.conditionDate.split(' ');
+//   this.condition_date = conditionDateTime[0];
+//   this.condition_time = conditionDateTime[1];
+// }
 //=======================================================================================================
 // Error messages
 app.get('/*', function(req, res) {
   res.status(404).send('halp, you are in the wrong place');
 });
-
-function errorMessage(res){
-  res.status(500).send('something went wrong. plzfix.');
-}
-
 app.listen(PORT, () => {
   console.log(`app is up on port : ${PORT}`);
 });
